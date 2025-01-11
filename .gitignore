@@ -1,0 +1,8 @@
+*.tfstate
+*.tfstate.backup
+.vscode
+.terraform
+ansible/inventory.yml
+*.lock.hcl
+.terraform.tfstate.lock.info
+*.tfvars

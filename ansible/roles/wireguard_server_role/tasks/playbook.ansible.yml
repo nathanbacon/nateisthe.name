@@ -1,0 +1,95 @@
+- name: Install VPN
+  hosts: myhosts
+  remote_user: nathan
+  become: true
+  tasks:
+    - name: Update apt package list
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Upgrade all packages to the latest version
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+
+    - name: Install WireGuard
+      ansible.builtin.apt:
+        name: wireguard
+        state: present
+
+    - name: Register if config/private key already exists on target hosts
+      ansible.builtin.stat:
+        path: "/etc/wireguard/wg0.conf"
+      register: wireguard__register_config_file
+      tags:
+        - wg-generate-keys
+        - wg-config
+
+    - name: WireGuard private key handling for new keys
+      when:
+        - not wireguard__register_config_file.stat.exists
+        - wireguard_private_key is not defined
+      block:
+        - name: Generate WireGuard private key
+          ansible.builtin.command: "wg genkey"
+          register: wireguard__register_private_key
+          changed_when: false
+          no_log: '{{ ansible_verbosity < 3 }}'
+          check_mode: false
+          tags:
+            - wg-generate-keys
+
+        - name: Set private key fact
+          ansible.builtin.set_fact:
+            wireguard_private_key: "{{ wireguard__register_private_key.stdout }}"
+          no_log: '{{ ansible_verbosity < 3 }}'
+          tags:
+            - wg-generate-keys
+
+    - name: Derive WireGuard public key
+      ansible.builtin.command: "wg pubkey"
+      args:
+        stdin: "{{ wireguard_private_key }}"
+      register: wireguard__register_public_key
+      changed_when: false
+      check_mode: false
+      no_log: '{{ ansible_verbosity < 3 }}'
+      tags:
+        - wg-config
+
+    - name: Set public key fact
+      ansible.builtin.set_fact:
+        wireguard__fact_public_key: "{{ wireguard__register_public_key.stdout }}"
+      tags:
+        - wg-config
+
+    - name: Create WireGuard configuration directory
+      ansible.builtin.file:
+        dest: "/etc/wireguard"
+        state: directory
+        mode: "0700"
+      tags:
+        - wg-config
+
+    - name: Generate WireGuard configuration file
+      ansible.builtin.template:
+        src: "etc/wireguard/wg.conf.j2"
+        dest: "/etc/wireguard/wg0.conf"
+        owner: "{{ wireguard_conf_owner }}"
+        group: "{{ wireguard_conf_group }}"
+        mode: "{{ wireguard_conf_mode }}"
+        backup: "{{ wireguard_conf_backup }}"
+      no_log: '{{ ansible_verbosity < 3 }}'
+      tags:
+        - wg-config
+      notify:
+        - "reconfigure wireguard"
+
+    - name: Start and enable WireGuard service
+      ansible.builtin.service:
+        name: "wg-quick@{{ wireguard_interface }}"
+        state: "{{ wireguard_service_state }}"
+        enabled: "{{ wireguard_service_enabled }}"
+      when:
+        - not ansible_os_family == 'Darwin'
