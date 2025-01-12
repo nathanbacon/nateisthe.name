@@ -1,4 +1,6 @@
 - name: Appy wireguard to my_vpn_host
   hosts: my_vpn_host
+  remote_user: nathan
+  become: true
   roles:
     - wireguard_server_role
