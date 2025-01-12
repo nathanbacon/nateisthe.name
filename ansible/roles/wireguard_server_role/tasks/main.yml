@@ -1,13 +1,9 @@
 # tasks file for wireguard-server-role
-- name: Update apt package list
+- name: Update and upgrade apt packages
   ansible.builtin.apt:
+    upgrade: true
     update_cache: true
-
-- name: Upgrade all packages to the latest version
-  ansible.builtin.apt:
-    upgrade: dist
-    autoremove: true
-    autoclean: true
+    cache_valid_time: 86400 # One day
 
 - name: Install WireGuard
   ansible.builtin.apt:
