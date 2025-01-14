@@ -153,5 +153,5 @@ myhosts:
             ansible_host: ${azurerm_dns_a_record.vm_a_record.name}.${var.domain_name}
             ansible_user: ${local.username}
     EOT
-  filename = "${path.module}/../ansible/inventory.yml"
+  filename = "${path.module}/../../ansible/inventory.yml"
 }
