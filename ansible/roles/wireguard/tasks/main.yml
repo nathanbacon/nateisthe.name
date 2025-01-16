@@ -39,6 +39,30 @@
       tags:
         - wg-generate-keys
 
+- name: WireGuard private key handling for existing keys
+  when:
+    - wireguard__register_config_file.stat.exists
+    - wireguard_private_key is not defined
+  block:
+    - name: Read WireGuard config file
+      ansible.builtin.slurp:
+        src: "{{ wireguard_remote_directory }}/{{ wireguard_conf_filename }}"
+      register: wireguard__register_config
+      no_log: '{{ ansible_verbosity < 3 }}'
+      tags:
+        - wg-config
+
+    - name: Set private key fact
+      ansible.builtin.set_fact:
+        wireguard_private_key: >-
+          {{ wireguard__register_config['content'] | b64decode |
+             regex_findall(wireguard_ubuntu_use_netplan |
+             ternary('key:\s*(.*)$', 'PrivateKey\s*=\s*(.*)$'), multiline=True) |
+             first }}
+      no_log: '{{ ansible_verbosity < 3 }}'
+      tags:
+        - wg-config
+
 - name: Derive WireGuard public key
   ansible.builtin.command: "wg pubkey"
   args:
@@ -83,5 +107,3 @@
     name: "wg-quick@{{ wireguard_interface }}"
     state: "{{ wireguard_service_state }}"
     enabled: "{{ wireguard_service_enabled }}"
-  when:
-    - not ansible_os_family == 'Darwin'
