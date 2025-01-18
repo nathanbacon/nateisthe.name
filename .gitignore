@@ -6,3 +6,4 @@ ansible/inventory.yml
 *.lock.hcl
 .terraform.tfstate.lock.info
 *.tfvars
+host_vars

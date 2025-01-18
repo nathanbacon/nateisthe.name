@@ -1,4 +1,4 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # handlers file for wireguard-server-role
 
@@ -12,3 +12,16 @@
   when:
     - wireguard_service_enabled == "yes"
   listen: "reconfigure wireguard"
+
+- name: "Reload ufw"
+  community.general.ufw:
+    state: reloaded
+
+- name: Restart ssh
+  ansible.builtin.service:
+    name: ssh
+    state: "{{ item }}"
+  loop:
+    - stopped
+    - started
+  listen: "Restart ssh"

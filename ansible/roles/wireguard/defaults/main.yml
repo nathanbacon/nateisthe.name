@@ -9,8 +9,21 @@ wireguard_conf_backup: false
 wireguard_interface_restart: false
 wireguard_update_cache: "true"
 wireguard_interface: "wg0"
-wireguard_service_enabled: "yes"
+wireguard_service_enabled: "true"
 wireguard_service_state: "started"
+wireguard_remote_directory: "/etc/wireguard"
+wireguard_conf_filename: "{{ wireguard_interface }}.conf"
+
+wireguard_address: "10.10.10.1/24"
+wireguard_port: "51820"
+wireguard_saveconfig: "true"
+
+wireguard_postup:
+  - ufw route allow in on wg0 out on eth0
+  - iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
+wireguard_predown:
+  - ufw route delete allow in on wg0 out on eth0
+  - iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
 wireguard_sysctl_settings:
   # "net.ipv4.tcp_syncookies": 1                     # Enable syn flood protection
@@ -41,3 +54,16 @@ wireguard_sysctl_settings:
   # "fs.protected_symlinks": 1                       # Provide protection from ToCToU races
   # "kernel.kptr_restrict": 1                        # Make locating kernel addresses more difficult
   # "kernel.perf_event_paranoid": 2                  # Set perf only available to root
+
+wireguard_sshd_settings:
+  "^PasswordAuthentication": "PasswordAuthentication no"  # Disable password authentication
+  # "^PermitRootLogin": "PermitRootLogin no"                # Disable SSH root login
+  # "^PermitTunnel": "PermitTunnel no"                      # Disable tun(4) device forwarding
+  "^Port ": "Port 22"                                     # Set sshd port
+
+wireguard_ufw_rules:
+  - rule: "allow"
+    to_port: "51820"
+    protocol: "udp"
+  - rule: "allow"
+    name: "OpenSSH"

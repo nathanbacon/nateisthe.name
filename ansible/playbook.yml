@@ -3,4 +3,4 @@
   remote_user: nathan
   become: true
   roles:
-    - wireguard_server_role
+    - wireguard

@@ -83,34 +83,6 @@ resource "azurerm_network_security_group" "primary" {
   resource_group_name = azurerm_resource_group.vpn_rg.name
 }
 
-resource "azurerm_network_security_rule" "primary_ssh" {
-  name                        = "ssh"
-  resource_group_name         = azurerm_resource_group.vpn_rg.name
-  network_security_group_name = azurerm_network_security_group.primary.name
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "22"
-  source_address_prefix       = "*"
-  destination_address_prefix  = azurerm_network_interface.main.private_ip_address
-}
-
-resource "azurerm_network_security_rule" "primary_wireguard" {
-  name                        = "wireguard"
-  resource_group_name         = azurerm_resource_group.vpn_rg.name
-  network_security_group_name = azurerm_network_security_group.primary.name
-  access                      = "Allow"
-  direction                   = "Inbound"
-  priority                    = 200
-  protocol                    = "Udp"
-  source_port_range           = "*"
-  source_address_prefix       = "*"
-  destination_port_range      = "51820"
-  destination_address_prefix  = azurerm_network_interface.main.private_ip_address
-}
-
 resource "azurerm_network_interface_security_group_association" "primary" {
   network_interface_id      = azurerm_network_interface.main.id
   network_security_group_id = azurerm_network_security_group.primary.id
