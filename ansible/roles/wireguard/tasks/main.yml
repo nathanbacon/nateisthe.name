@@ -5,6 +5,12 @@
     update_cache: true
     cache_valid_time: 86400 # One day
 
+- name: (Ubuntu) Ensure WireGuard DKMS package is removed
+  ansible.builtin.apt:
+    name:
+      - "wireguard-dkms"
+    state: absent
+
 - name: Install WireGuard
   ansible.builtin.apt:
     name: wireguard

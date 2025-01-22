@@ -22,10 +22,12 @@ wireguard_dns: "168.63.129.16"
 wireguard_postup:
   - ufw route allow in on wg0 out on eth0
   # - iptables -A FORWARD -i wg0 -o wg0 -j ACCEPT
-  - iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
+  - iptables -A FORWARD -i %i -j ACCEPT
+  - iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 wireguard_predown:
   - ufw route delete allow in on wg0 out on eth0
   # - iptables -D FORWARD -i wg0 -o wg0 -j ACCEPT
+  - iptables -D FORWARD -i %i -j ACCEPT
   - iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
 wireguard_sysctl_settings:
