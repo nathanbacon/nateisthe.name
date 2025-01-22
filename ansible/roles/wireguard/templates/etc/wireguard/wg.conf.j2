@@ -23,6 +23,9 @@ PreDown = {{ wg_predown }}
 PostDown = {{ wg_postdown }}
 {% endfor %}
 {% endif %}
+{% if wireguard_dns is defined %}
+DNS = wireguard_dns
+{% endif %}
 
 {% if wireguard_unmanaged_peers is defined %}
 
@@ -34,8 +37,8 @@ PublicKey = {{ wireguard_unmanaged_peers[peer].public_key }}
 {%     if wireguard_unmanaged_peers[peer].preshared_key is defined %}
 PresharedKey = {{ wireguard_unmanaged_peers[peer].preshared_key }}
 {%     endif %}
-{%     if wireguard_unmanaged_peers[peer].allowed_ips is defined %}
-AllowedIPs = {{ wireguard_unmanaged_peers[peer].allowed_ips }}
+{%     if wireguard_unmanaged_peers[peer].peer_allowed_ips is defined %}
+AllowedIPs = {{ wireguard_unmanaged_peers[peer].peer_allowed_ips }}
 {%     endif %}
 {%     if wireguard_unmanaged_peers[peer].endpoint is defined %}
 Endpoint = {{ wireguard_unmanaged_peers[peer].endpoint }}

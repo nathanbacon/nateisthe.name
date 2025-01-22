@@ -48,7 +48,7 @@
       ansible.builtin.slurp:
         src: "{{ wireguard_remote_directory }}/{{ wireguard_conf_filename }}"
       register: wireguard__register_config
-      # no_log: '{{ ansible_verbosity < 3 }}'
+      no_log: '{{ ansible_verbosity < 3 }}'
       tags:
         - wg-config
 
@@ -58,7 +58,7 @@
           {{ wireguard__register_config['content'] | b64decode |
              regex_findall('PrivateKey\s*=\s*(.*)$', multiline=True) |
              first }}
-      # no_log: '{{ ansible_verbosity < 3 }}'
+      no_log: '{{ ansible_verbosity < 3 }}'
       tags:
         - wg-config
 
@@ -75,7 +75,7 @@
 
 - name: Set public key fact
   ansible.builtin.set_fact:
-    wireguard__fact_public_key: "{{ wireguard__register_public_key.stdout }}"
+    wireguard_public_key: "{{ wireguard__register_public_key.stdout }}"
   tags:
     - wg-config
 
@@ -86,6 +86,19 @@
     mode: "0700"
   tags:
     - wg-config
+
+- name: Create WireGuard peer configuration directory
+  ansible.builtin.file:
+    dest: "/etc/wireguard/configs"
+    state: directory
+    mode: "0700"
+  tags:
+    - wg-config
+
+- name: My Debug Loop
+  ansible.builtin.debug:
+    msg: "{{ item }}   {{ wireguard_unmanaged_peers[item].public_key }}"
+  loop: "{{ wireguard_unmanaged_peers | flatten }}"
 
 - name: Generate WireGuard configuration file
   ansible.builtin.template:
@@ -101,14 +114,29 @@
   notify:
     - "reconfigure wireguard"
 
-# - name: Sysctl settings
-#   ansible.posix.syctl:
-#     name: "{{ item }}"
-#     value: "{{ wireguard_sysctl_settings[item] }}"
-#     sysctl_set: true
-#   loop: "{{ wireguard_sysctl_settings | flatten }}"
-#   tags:
-#     - sysctl
+- name: Generate WireGuard peer configuration files
+  ansible.builtin.template:
+    src: "etc/wireguard/configs/peer.conf.j2"
+    dest: "/etc/wireguard/configs/{{ item }}.conf"
+    owner: "{{ wireguard_conf_owner }}"
+    group: "{{ wireguard_conf_group }}"
+    mode: "{{ wireguard_conf_mode }}"
+    backup: "{{ wireguard_conf_backup }}"
+  # no_log: '{{ ansible_verbosity < 3 }}'
+  loop: "{{ wireguard_unmanaged_peers | flatten }}"
+  tags:
+    - wg-config
+  notify:
+    - "reconfigure wireguard"
+
+- name: Sysctl settings
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "{{ wireguard_sysctl_settings[item] }}"
+    sysctl_set: true
+  loop: "{{ wireguard_sysctl_settings | flatten }}"
+  tags:
+    - sysctl
 
 - name: Ensure sshd_config setting
   ansible.builtin.lineinfile:
@@ -141,6 +169,12 @@
   tags:
     - ufw
     - ufwrules
+
+- name: UFW - Enable firewall/iptables
+  community.general.ufw:
+    state: disabled
+  tags:
+    - ufw
 
 - name: UFW - Enable firewall/iptables
   community.general.ufw:

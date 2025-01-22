@@ -1,0 +1,24 @@
+[Interface]
+{% if wireguard_unmanaged_peers[item].private_key is defined %}
+PrivateKey = {{ wireguard_unmanaged_peers[item].private_key }}
+{% endif %}
+{% if wireguard_unmanaged_peers[item].address is defined %}
+Address = {{ wireguard_unmanaged_peers[item].address }}
+{% endif %}
+{% if wireguard_unmanaged_peers[item].server_dns is defined %}
+DNS = {{ wireguard_unmanaged_peers[item].server_dns }}
+{% endif %}
+
+[Peer]
+{% if wireguard_public_key is defined %}
+PublicKey = {{ wireguard_public_key }}
+{% endif %}
+{% if wireguard_unmanaged_peers[item].preshared_key is defined %}
+PresharedKey = {{ wireguard_unmanaged_peers[item].preshared_key }}
+{% endif %}
+{% if wireguard_unmanaged_peers[item].endpoint is defined %}
+Endpoint = {{ wireguard_unmanaged_peers[item].endpoint }}
+{% endif %}
+{% if wireguard_unmanaged_peers[item].server_allowed_ips is defined %}
+AllowedIPs = {{ wireguard_unmanaged_peers[item].server_allowed_ips }}
+{% endif %}
