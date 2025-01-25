@@ -34,8 +34,8 @@ DNS = wireguard_dns
 [Peer]
 # Name = {{ peer }}
 PublicKey = {{ wireguard_unmanaged_peers[peer].public_key }}
-{%     if wireguard_unmanaged_peers[peer].preshared_key is defined %}
-PresharedKey = {{ wireguard_unmanaged_peers[peer].preshared_key }}
+{%     if wireguard_preshared_keys[peer] is defined %}
+PresharedKey = {{ wireguard_preshared_keys[peer] }}
 {%     endif %}
 {%     if wireguard_unmanaged_peers[peer].peer_allowed_ips is defined %}
 AllowedIPs = {{ wireguard_unmanaged_peers[peer].peer_allowed_ips }}

@@ -33,7 +33,7 @@
       ansible.builtin.command: "wg genkey"
       register: wireguard__register_private_key
       changed_when: false
-      no_log: '{{ ansible_verbosity < 3 }}'
+      no_log: "{{ ansible_verbosity < 3 }}"
       check_mode: false
       tags:
         - wg-generate-keys
@@ -41,7 +41,7 @@
     - name: Set private key fact
       ansible.builtin.set_fact:
         wireguard_private_key: "{{ wireguard__register_private_key.stdout }}"
-      no_log: '{{ ansible_verbosity < 3 }}'
+      no_log: "{{ ansible_verbosity < 3 }}"
       tags:
         - wg-generate-keys
 
@@ -54,7 +54,7 @@
       ansible.builtin.slurp:
         src: "{{ wireguard_remote_directory }}/{{ wireguard_conf_filename }}"
       register: wireguard__register_config
-      no_log: '{{ ansible_verbosity < 3 }}'
+      no_log: "{{ ansible_verbosity < 3 }}"
       tags:
         - wg-config
 
@@ -64,9 +64,28 @@
           {{ wireguard__register_config['content'] | b64decode |
              regex_findall('PrivateKey\s*=\s*(.*)$', multiline=True) |
              first }}
-      no_log: '{{ ansible_verbosity < 3 }}'
+      no_log: "{{ ansible_verbosity < 3 }}"
       tags:
         - wg-config
+
+- name: Set Preshared Keys
+  loop: "{{ wireguard_unmanaged_peers | flatten }}"
+  block:
+    - name: Generate WireGuard Preshared Key
+      ansible.builtin.command: "wg genkey"
+      register: wireguard__register_preshared_key
+      changed_when: false
+      no_log: "{{ ansible_verbosity < 3 }}"
+      check_mode: false
+      tags:
+        - wg-generate-keys
+
+    - name: Set private key fact
+      ansible.builtin.set_fact:
+        wireguard_preshared_keys: "{{ wireguard_preshared_keys | default({}) | combine({item: wireguard__register_private_key.stdout}) }}"
+      no_log: "{{ ansible_verbosity < 3 }}"
+      tags:
+        - wg-generate-keys
 
 - name: Derive WireGuard public key
   ansible.builtin.command: "wg pubkey"
@@ -75,7 +94,7 @@
   register: wireguard__register_public_key
   changed_when: false
   check_mode: false
-  no_log: '{{ ansible_verbosity < 3 }}'
+  no_log: "{{ ansible_verbosity < 3 }}"
   tags:
     - wg-config
 
@@ -100,11 +119,6 @@
     mode: "0700"
   tags:
     - wg-config
-
-- name: My Debug Loop
-  ansible.builtin.debug:
-    msg: "{{ item }}   {{ wireguard_unmanaged_peers[item].public_key }}"
-  loop: "{{ wireguard_unmanaged_peers | flatten }}"
 
 - name: Generate WireGuard configuration file
   ansible.builtin.template:
@@ -134,6 +148,18 @@
     - wg-config
   notify:
     - "reconfigure wireguard"
+
+- name: Email Configuration File
+  ansible.builtin.mail:
+    host: "{{ wireguard_unmanaged_peers['my_client'].smtp_host }}"
+    port: "{{ wireguard_unmanaged_peers['my_client'].smtp_port }}"
+    username: "{{ wireguard_unmanaged_peers['my_client'].smtp_username }}"
+    password: "{{ wireguard_unmanaged_peers['my_client'].smtp_password }}"
+    to: "{{ wireguard_unmanaged_peers['my_client'].email_addressee }}"
+    from: "{{ wireguard_send_config_to }}"
+    subject: Peer configuration
+    attach:
+      - "/etc/wireguard/configs/my_client.conf"
 
 - name: Sysctl settings
   ansible.posix.sysctl:

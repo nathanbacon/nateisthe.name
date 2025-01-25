@@ -16,8 +16,8 @@ PublicKey = {{ wireguard_public_key }}
 {% if wireguard_unmanaged_peers[item].preshared_key is defined %}
 PresharedKey = {{ wireguard_unmanaged_peers[item].preshared_key }}
 {% endif %}
-{% if wireguard_unmanaged_peers[item].endpoint is defined %}
-Endpoint = {{ wireguard_unmanaged_peers[item].endpoint }}
+{% if wireguard_unmanaged_peers[item].server_endpoint is defined %}
+Endpoint = {{ wireguard_unmanaged_peers[item].server_endpoint }}
 {% endif %}
 {% if wireguard_unmanaged_peers[item].server_allowed_ips is defined %}
 AllowedIPs = {{ wireguard_unmanaged_peers[item].server_allowed_ips }}
