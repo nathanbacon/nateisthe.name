@@ -80,7 +80,7 @@
       tags:
         - wg-generate-keys
 
-    - name: Set private key fact
+    - name: Set preshared key fact
       ansible.builtin.set_fact:
         wireguard_preshared_keys: "{{ wireguard_preshared_keys | default({}) | combine({item: wireguard__register_private_key.stdout}) }}"
       no_log: "{{ ansible_verbosity < 3 }}"
@@ -149,17 +149,20 @@
   notify:
     - "reconfigure wireguard"
 
-- name: Email Configuration File
-  ansible.builtin.mail:
-    host: "{{ wireguard_unmanaged_peers['my_client'].smtp_host }}"
-    port: "{{ wireguard_unmanaged_peers['my_client'].smtp_port }}"
-    username: "{{ wireguard_unmanaged_peers['my_client'].smtp_username }}"
-    password: "{{ wireguard_unmanaged_peers['my_client'].smtp_password }}"
-    to: "{{ wireguard_unmanaged_peers['my_client'].email_addressee }}"
-    from: "{{ wireguard_send_config_to }}"
-    subject: Peer configuration
-    attach:
-      - "/etc/wireguard/configs/my_client.conf"
+- name: Set Preshared Keys
+  loop: "{{ wireguard_unmanaged_peers | flatten }}"
+  block:
+    - name: Email Configuration File
+      ansible.builtin.mail:
+        host: "{{ wireguard_unmanaged_peers[item].smtp_host }}"
+        port: "{{ wireguard_unmanaged_peers[item].smtp_port }}"
+        username: "{{ wireguard_unmanaged_peers[item].smtp_username }}"
+        password: "{{ wireguard_unmanaged_peers[item].smtp_password }}"
+        to: "{{ wireguard_unmanaged_peers[item].email_addressee }}"
+        from: "{{ wireguard_send_config_to }}"
+        subject: Peer configuration
+        attach:
+          - "/etc/wireguard/configs/{{ item }}.conf"
 
 - name: Sysctl settings
   ansible.posix.sysctl:
