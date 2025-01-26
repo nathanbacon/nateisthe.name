@@ -13,8 +13,8 @@ DNS = {{ wireguard_unmanaged_peers[item].server_dns }}
 {% if wireguard_public_key is defined %}
 PublicKey = {{ wireguard_public_key }}
 {% endif %}
-{% if wireguard_unmanaged_peers[item].preshared_key is defined %}
-PresharedKey = {{ wireguard_unmanaged_peers[item].preshared_key }}
+{% if wireguard_preshared_keys[item] is defined %}
+PresharedKey = {{ wireguard_preshared_keys[item] }}
 {% endif %}
 {% if wireguard_unmanaged_peers[item].server_endpoint is defined %}
 Endpoint = {{ wireguard_unmanaged_peers[item].server_endpoint }}

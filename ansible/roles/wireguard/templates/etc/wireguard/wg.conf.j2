@@ -37,8 +37,8 @@ PublicKey = {{ wireguard_unmanaged_peers[peer].public_key }}
 {%     if wireguard_preshared_keys[peer] is defined %}
 PresharedKey = {{ wireguard_preshared_keys[peer] }}
 {%     endif %}
-{%     if wireguard_unmanaged_peers[peer].peer_allowed_ips is defined %}
-AllowedIPs = {{ wireguard_unmanaged_peers[peer].peer_allowed_ips }}
+{%     if wireguard_unmanaged_peers[peer].address is defined %}
+AllowedIPs = {{ wireguard_unmanaged_peers[peer].address.split('/')[0] }}/32
 {%     endif %}
 {%     if wireguard_unmanaged_peers[peer].endpoint is defined %}
 Endpoint = {{ wireguard_unmanaged_peers[peer].endpoint }}
