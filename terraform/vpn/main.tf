@@ -116,14 +116,3 @@ resource "azurerm_linux_virtual_machine" "vpn_vm" {
     version   = "latest"
   }
 }
-
-resource "local_file" "name" {
-  content  = <<EOT
-myhosts:
-    hosts:
-        my_vpn_host:
-            ansible_host: ${azurerm_dns_a_record.vm_a_record.name}.${var.domain_name}
-            ansible_user: ${local.username}
-    EOT
-  filename = "${path.module}/../../ansible/inventory.yml"
-}

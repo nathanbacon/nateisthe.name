@@ -24,7 +24,10 @@ PostDown = {{ wg_postdown }}
 {% endfor %}
 {% endif %}
 {% if wireguard_dns is defined %}
-DNS = wireguard_dns
+DNS = {{ wireguard_dns }}
+{% endif %}
+{% if wireguard_table is defined %}
+Table = {{ wireguard_table }}
 {% endif %}
 
 {% if wireguard_unmanaged_peers is defined %}
@@ -55,7 +58,7 @@ PersistentKeepalive = {{ wireguard_unmanaged_peers[peer].persistent_keepalive }}
 
 [Peer]
 # Name = {{ host }}
-PublicKey = {{hostvars[host].wireguard__fact_public_key}}
+PublicKey = {{hostvars[host].wireguard_public_key}}
 {%     if hostvars[host].wireguard_allowed_ips is defined %}
 AllowedIPs = {{hostvars[host].wireguard_allowed_ips}}
 {%     else %}

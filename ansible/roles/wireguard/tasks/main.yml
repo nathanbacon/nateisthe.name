@@ -11,6 +11,17 @@
       - "wireguard-dkms"
     state: absent
 
+- name: Install iptables
+  ansible.builtin.apt:
+    name: iptables
+    state: present
+
+- name: Install resolvconf
+  when: not wireguard_is_raspberry_pi
+  ansible.builtin.apt:
+    name: resolvconf
+    state: present
+
 - name: Install WireGuard
   ansible.builtin.apt:
     name: wireguard
@@ -68,24 +79,24 @@
       tags:
         - wg-config
 
-- name: Set Preshared Keys
-  loop: "{{ wireguard_unmanaged_peers | flatten }}"
-  block:
-    - name: Generate WireGuard Preshared Key
-      ansible.builtin.command: "wg genkey"
-      register: wireguard__register_preshared_key
-      changed_when: false
-      no_log: "{{ ansible_verbosity < 3 }}"
-      check_mode: false
-      tags:
-        - wg-generate-keys
+# - name: Set Preshared Keys
+#   loop: "{{ wireguard_unmanaged_peers | flatten }}"
+#   block:
+#     - name: Generate WireGuard Preshared Key
+#       ansible.builtin.command: "wg genkey"
+#       register: wireguard__register_preshared_key
+#       changed_when: false
+#       no_log: "{{ ansible_verbosity < 3 }}"
+#       check_mode: false
+#       tags:
+#         - wg-generate-keys
 
-    - name: Set preshared key fact
-      ansible.builtin.set_fact:
-        wireguard_preshared_keys: "{{ wireguard_preshared_keys | default({}) | combine({item: wireguard__register_private_key.stdout}) }}"
-      no_log: "{{ ansible_verbosity < 3 }}"
-      tags:
-        - wg-generate-keys
+#     - name: Set preshared key fact
+#       ansible.builtin.set_fact:
+#         wireguard_preshared_keys: "{{ wireguard_preshared_keys | default({}) | combine({item: wireguard__register_private_key.stdout}) }}"
+#       no_log: "{{ ansible_verbosity < 3 }}"
+#       tags:
+#         - wg-generate-keys
 
 - name: Derive WireGuard public key
   ansible.builtin.command: "wg pubkey"
@@ -137,7 +148,7 @@
 - name: Generate WireGuard peer configuration files
   ansible.builtin.template:
     src: "etc/wireguard/configs/peer.conf.j2"
-    dest: "/etc/wireguard/configs/{{ item }}.conf"
+    dest: "/etc/wireguard/configs/{{ item }}_{{ inventory_hostname }}.conf"
     owner: "{{ wireguard_conf_owner }}"
     group: "{{ wireguard_conf_group }}"
     mode: "{{ wireguard_conf_mode }}"
@@ -149,20 +160,19 @@
   notify:
     - "reconfigure wireguard"
 
-- name: Set Preshared Keys
+- name: Email Configuration File
+  failed_when: false
+  ansible.builtin.mail:
+    host: "{{ wireguard_unmanaged_peers[item].smtp_host }}"
+    port: "{{ wireguard_unmanaged_peers[item].smtp_port }}"
+    username: "{{ wireguard_unmanaged_peers[item].smtp_username }}"
+    password: "{{ wireguard_unmanaged_peers[item].smtp_password }}"
+    to: "{{ wireguard_unmanaged_peers[item].email_addressee }}"
+    from: "{{ wireguard_send_config_to }}"
+    subject: Peer configuration
+    attach:
+      - "/etc/wireguard/configs/{{ item }}_{{ inventory_hostname }}.conf"
   loop: "{{ wireguard_unmanaged_peers | flatten }}"
-  block:
-    - name: Email Configuration File
-      ansible.builtin.mail:
-        host: "{{ wireguard_unmanaged_peers[item].smtp_host }}"
-        port: "{{ wireguard_unmanaged_peers[item].smtp_port }}"
-        username: "{{ wireguard_unmanaged_peers[item].smtp_username }}"
-        password: "{{ wireguard_unmanaged_peers[item].smtp_password }}"
-        to: "{{ wireguard_unmanaged_peers[item].email_addressee }}"
-        from: "{{ wireguard_send_config_to }}"
-        subject: Peer configuration
-        attach:
-          - "/etc/wireguard/configs/{{ item }}.conf"
 
 - name: Sysctl settings
   ansible.posix.sysctl:
@@ -198,6 +208,7 @@
     delete: "{{ item.delete | default(False) }}"
     name: "{{ item.name | default(omit) }}"
   notify: "Reload ufw"
+  when: wireguard_ufw_enabled
   loop: "{{ wireguard_ufw_rules }}"
   loop_control:
     pause: 1
@@ -208,12 +219,14 @@
 - name: UFW - Enable firewall/iptables
   community.general.ufw:
     state: disabled
+  when: wireguard_ufw_enabled
   tags:
     - ufw
 
 - name: UFW - Enable firewall/iptables
   community.general.ufw:
     state: enabled
+  when: wireguard_ufw_enabled
   tags:
     - ufw
 

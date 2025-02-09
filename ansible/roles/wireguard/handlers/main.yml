@@ -10,7 +10,7 @@
     - stopped
     - started
   when:
-    - wireguard_service_enabled == "yes"
+    - wireguard_service_enabled == "true"
   listen: "reconfigure wireguard"
 
 - name: "Reload ufw"

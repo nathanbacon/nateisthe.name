@@ -13,11 +13,11 @@ wireguard_service_enabled: "true"
 wireguard_service_state: "started"
 wireguard_remote_directory: "/etc/wireguard"
 wireguard_conf_filename: "{{ wireguard_interface }}.conf"
+wireguard_is_raspberry_pi: false
 
 wireguard_address: "10.10.10.1/24"
 wireguard_port: "51820"
-wireguard_saveconfig: "true"
-wireguard_dns: "168.63.129.16"
+wireguard_saveconfig: "false"
 
 wireguard_postup:
   - ufw route allow in on wg0 out on eth0
@@ -42,7 +42,7 @@ wireguard_sysctl_settings:
   # "net.ipv6.conf.default.accept_redirects": 0      # IPv6 - Ignore ICMP redirects
   # "net.ipv4.conf.all.secure_redirects": 1          # Ignore ICMP redirects from non-GW hosts
   # "net.ipv4.conf.default.secure_redirects": 1      # Ignore ICMP redirects from non-GW hosts
-  "net.ipv4.ip_forward": 1                           # Do allow traffic between networks or act as a router
+  "net.ipv4.ip_forward": 1 # Do allow traffic between networks or act as a router
   # "net.ipv6.conf.all.forwarding": 0                # IPv6 - Do not allow traffic between networks or act as a router
   # "net.ipv4.conf.all.send_redirects": 0            # Don't allow traffic between networks or act as a router
   # "net.ipv4.conf.default.send_redirects": 0        # Don't allow traffic between networks or act as a router
@@ -61,10 +61,12 @@ wireguard_sysctl_settings:
   # "kernel.perf_event_paranoid": 2                  # Set perf only available to root
 
 wireguard_sshd_settings:
-  "^PasswordAuthentication": "PasswordAuthentication no"  # Disable password authentication
+  "^PasswordAuthentication": "PasswordAuthentication no" # Disable password authentication
   # "^PermitRootLogin": "PermitRootLogin no"                # Disable SSH root login
   # "^PermitTunnel": "PermitTunnel no"                      # Disable tun(4) device forwarding
-  "^Port ": "Port 22"                                     # Set sshd port
+  "^Port ": "Port 22" # Set sshd port
+
+wireguard_ufw_enabled: false
 
 wireguard_ufw_rules:
   - rule: "allow"
