@@ -163,11 +163,11 @@
 - name: Email Configuration File
   failed_when: false
   ansible.builtin.mail:
-    host: "{{ wireguard_unmanaged_peers[item].smtp_host }}"
-    port: "{{ wireguard_unmanaged_peers[item].smtp_port }}"
-    username: "{{ wireguard_unmanaged_peers[item].smtp_username }}"
-    password: "{{ wireguard_unmanaged_peers[item].smtp_password }}"
-    to: "{{ wireguard_unmanaged_peers[item].email_addressee }}"
+    host: "{{ wireguard_smtp_host }}"
+    port: "{{ wireguard_smtp_port }}"
+    username: "{{ wireguard_smtp_username }}"
+    password: "{{ wireguard_smtp_password }}"
+    to: "{{ wireguard_smtp_email_addressee }}"
     from: "{{ wireguard_send_config_to }}"
     subject: Peer configuration
     attach:
