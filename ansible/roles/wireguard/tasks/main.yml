@@ -79,24 +79,11 @@
       tags:
         - wg-config
 
-# - name: Set Preshared Keys
-#   loop: "{{ wireguard_unmanaged_peers | flatten }}"
-#   block:
-#     - name: Generate WireGuard Preshared Key
-#       ansible.builtin.command: "wg genkey"
-#       register: wireguard__register_preshared_key
-#       changed_when: false
-#       no_log: "{{ ansible_verbosity < 3 }}"
-#       check_mode: false
-#       tags:
-#         - wg-generate-keys
-
-#     - name: Set preshared key fact
-#       ansible.builtin.set_fact:
-#         wireguard_preshared_keys: "{{ wireguard_preshared_keys | default({}) | combine({item: wireguard__register_private_key.stdout}) }}"
-#       no_log: "{{ ansible_verbosity < 3 }}"
-#       tags:
-#         - wg-generate-keys
+- name: Generate peer credentials
+  ansible.builtin.include_tasks: "peer_credentials.yml"
+  loop: "{{ wireguard_unmanaged_peers | flatten }}"
+  loop_control:
+    loop_var: peer
 
 - name: Derive WireGuard public key
   ansible.builtin.command: "wg pubkey"

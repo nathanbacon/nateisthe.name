@@ -1,6 +1,6 @@
 [Interface]
-{% if wireguard_unmanaged_peers[item].private_key is defined %}
-PrivateKey = {{ wireguard_unmanaged_peers[item].private_key }}
+{% if wireguard_peer_private_keys[item] is defined %}
+PrivateKey = {{ wireguard_peer_private_keys[item] }}
 {% endif %}
 {% if wireguard_unmanaged_peers[item].address is defined %}
 Address = {{ wireguard_unmanaged_peers[item].address }}

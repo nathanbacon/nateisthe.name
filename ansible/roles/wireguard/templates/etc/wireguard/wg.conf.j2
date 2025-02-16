@@ -36,7 +36,9 @@ Table = {{ wireguard_table }}
 {% for peer in wireguard_unmanaged_peers.keys() %}
 [Peer]
 # Name = {{ peer }}
-PublicKey = {{ wireguard_unmanaged_peers[peer].public_key }}
+{%     if wireguard_peer_public_keys[peer] is defined %}
+PublicKey = {{ wireguard_peer_public_keys[peer] }}
+{%     endif %}
 {%     if wireguard_preshared_keys[peer] is defined %}
 PresharedKey = {{ wireguard_preshared_keys[peer] }}
 {%     endif %}
