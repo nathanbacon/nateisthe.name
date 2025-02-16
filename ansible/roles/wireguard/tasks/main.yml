@@ -149,7 +149,7 @@
 
 - name: Email Configuration File
   failed_when: false
-  ansible.builtin.mail:
+  community.general.mail:
     host: "{{ wireguard_smtp_host }}"
     port: "{{ wireguard_smtp_port }}"
     username: "{{ wireguard_smtp_username }}"
