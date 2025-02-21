@@ -26,6 +26,23 @@
   ansible.builtin.apt:
     name: wireguard
     state: present
+  tags:
+    - wg-install
+
+- name: Enable WireGuard kernel module
+  community.general.modprobe:
+    name: wireguard
+    state: present
+  register: wireguard__register_module_enabled
+  until: wireguard__register_module_enabled is succeeded
+  retries: 10
+  delay: 10
+  failed_when: wireguard__register_module_enabled is failure
+  tags:
+    - wg-install
+    - wg-install-kernel-module
+  when:
+    - wireguard_install_kernel_module
 
 - name: Register if config/private key already exists on target hosts
   ansible.builtin.stat:

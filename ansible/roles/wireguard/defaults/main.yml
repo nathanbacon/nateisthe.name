@@ -14,6 +14,7 @@ wireguard_service_state: "started"
 wireguard_remote_directory: "/etc/wireguard"
 wireguard_conf_filename: "{{ wireguard_interface }}.conf"
 wireguard_is_raspberry_pi: false
+wireguard_install_kernel_module: true
 
 wireguard_address: "10.10.10.1/24"
 wireguard_port: "51820"
